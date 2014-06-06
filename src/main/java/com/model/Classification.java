@@ -28,8 +28,15 @@ public class Classification
     public static void main( String[] args ) throws Exception
     {
     	String sampleFile = "data/guests.arff";
-		Instances dataTrain = BuildSampleDataset();
-    	Instances dataTest = BuildSampleDataset();
+//		Instances dataTrain = BuildSampleDataset();
+//    	Instances dataTest = BuildSampleDataset();
+    	Instances bookersTrain = LoadDataset("data/headers.tab","data/bookers.sample.train",true);
+    	Instances nonBookerTrain = LoadDataset("data/headers.tab","data/nonbookers.sample.train",false);
+    	Instances dataTrain = Instances.mergeInstances(bookersTrain, nonBookerTrain);
+    	
+    	Instances bookersTest = LoadDataset("data/headers.tab","data/bookers.sample.test",true);
+    	Instances nonBookerTest = LoadDataset("data/headers.tab","data/nonbookers.sample.test",false);
+    	Instances dataTest = Instances.mergeInstances(bookersTest, nonBookerTest);
     	setModel();
 		train(model, dataTrain);
     	//System.out.println(model);
@@ -131,6 +138,53 @@ public class Classification
     			inst.setValue(i, (i%18==0)?(int)(Math.random()*9):(int)(Math.random()*4));
         		}
     	}
+	 	data.add(inst);
+    }
+	 	StandardizeFeatures(data);
+    	return data;
+    }
+    
+    public static Instances LoadDataset(String headerFile, String dataFile, boolean booker) throws Exception {
+    	
+    	int numOfInstances = 1000;
+    	BufferedReader br = new BufferedReader(new FileReader(headerFile));
+    	String[] headers = br.readLine().split("\t");
+    	br.close();
+
+    	int numOfAttribute = headers.length;
+    	System.out.println("num att: "+numOfAttribute);
+    	Instances data = null;
+    	ArrayList<Attribute> attributes = new ArrayList<Attribute>();
+    	for(int i=0; i<numOfAttribute; i++) {
+    		attributes.add(new Attribute(headers[i]));
+    	}
+    	//add class attribute
+    	attributes.add(new Attribute("class",Arrays.asList("+1","-1")));
+	 	data = new Instances(dataFile, attributes, 0);
+	 	data.setClassIndex(data.numAttributes() - 1);
+	 	
+	 	//Load data
+    	br = new BufferedReader(new FileReader(dataFile));
+    	
+    	String strLine = null;
+    	while ((strLine = br.readLine()) != null) 
+    	{
+	 	Instance inst = new DenseInstance(data.numAttributes());
+	 	inst.setDataset(data);
+	 	inst.setClassValue(booker?"+1":"-1");
+	 	String[] att = strLine.split("\t");
+	 	//System.out.println(strLine);
+	 	//System.out.println("line: "+att.length);
+	 	for(int i=0; i<numOfAttribute; i++) {
+	 		try{
+    			inst.setValue(i,att[i].hashCode());	
+	 		}
+	 		catch (Exception e) {
+	 			
+	 		}
+    			//System.out.print(headers[i]+":"+att[i]+"\t");
+    	}
+	 	//System.out.println();
 	 	data.add(inst);
     }
 	 	StandardizeFeatures(data);
