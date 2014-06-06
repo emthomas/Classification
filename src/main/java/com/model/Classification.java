@@ -1,16 +1,19 @@
 package com.model;
 
 import java.io.BufferedReader;
-import java.io.File;
-import java.io.FileNotFoundException;
 import java.io.FileOutputStream;
 import java.io.FileReader;
-import java.io.IOException;
 import java.io.PrintStream;
+import java.util.ArrayList;
+import java.util.Arrays;
 
 import weka.classifiers.Classifier;
+import weka.classifiers.Evaluation;
 import weka.classifiers.bayes.NaiveBayes;
 import weka.classifiers.functions.LinearRegression;
+import weka.core.Attribute;
+import weka.core.DenseInstance;
+import weka.core.FastVector;
 import weka.core.Instance;
 import weka.core.Instances;
 import weka.filters.Filter;
@@ -23,13 +26,15 @@ public class Classification
     public static void main( String[] args ) throws Exception
     {
     	String sampleFile = "data/guests.arff";
-		Instances dataTrain = BuildNaiveBayesSampleDataset(sampleFile);
-    	Instances dataTest = BuildNaiveBayesSampleDataset(sampleFile);
+		Instances dataTrain = BuildSampleDataset();
+    	Instances dataTest = BuildSampleDataset();
     	setModel();
 		train(model, dataTrain);
-		System.out.println(dataTrain.toSummaryString());
-		System.out.println(model);
-		test(model, dataTest);
+    	//System.out.println(model);
+    	evaluate(dataTrain,dataTest);
+		//System.out.println(dataTrain.toSummaryString());
+		System.out.println(dataTrain);
+		//test(model, dataTest);
     }
     
     public static void setModel() throws Exception {
@@ -65,7 +70,52 @@ public class Classification
 		System.out.println("Accuracy: "+accuracy+"%");
     }
     
-    public static Instances BuildNaiveBayesSampleDataset (String fileName) throws Exception {
+    public static void evaluate(Instances dataTrain, Instances dataTest) throws Exception {
+    	Evaluation evaluation = new Evaluation(dataTrain);
+		evaluation.evaluateModel(model, dataTest);
+		System.out.println(evaluation.toSummaryString(true));
+		System.out.println(evaluation.toClassDetailsString("=== Class ==="));
+		System.out.println(evaluation.toMatrixString("=== Matrix ==="));
+		System.out.println(evaluation.toCumulativeMarginDistributionString());
+    }
+    
+    public static Instances BuildSampleDataset() throws Exception {
+    	int numOfAttribute = 3;
+    	int numOfInstances = 10;
+    	Instances data = null;
+    	ArrayList<Attribute> attributes = new ArrayList<Attribute>();
+    	
+    	for(int i=0; i<numOfAttribute; i++) {
+    		attributes.add(new Attribute("att_"+i));
+    		if(i==numOfAttribute-1) {
+    			attributes.add(new Attribute("class",Arrays.asList("+1","-1")));
+    		}
+    	}
+    	
+	 	data = new Instances("train_dataset", attributes, 0);
+	 	data.setClassIndex(data.numAttributes() - 1);
+    
+	 for(int j=0; j<numOfInstances; j++)
+	 {
+	 	Instance inst = new DenseInstance(data.numAttributes());
+	 	inst.setDataset(data);
+	 	String booker = Math.rint(Math.random()*5)==1?"+1":"-1";
+	 	inst.setClassValue(booker);
+	 	for(int i=0; i<numOfAttribute; i++) {
+    		if(booker.equals("+1")) {
+    			inst.setValue(i, Math.random()+10);
+        			}
+        	else {
+            	inst.setValue(i, Math.random());	
+        		}
+    	}
+	 	data.add(inst);
+    }
+	 	StandardizeFeatures(data);
+    	return data;
+    }
+    
+    public static Instances BuildSampleDataset(String fileName) throws Exception {
     	PrintStream ps = new PrintStream(new FileOutputStream(fileName));
     	String header = "@RELATION guest\n"+
     					"@ATTRIBUTE timeOnSite NUMERIC\n"+
@@ -79,7 +129,7 @@ public class Classification
     	ps.println(header);
     	double[] features = new double[6];
     	String booker = "";
-    	for(int i=0; i<100; i++) {
+    	for(int i=0; i<1000; i++) {
     		for(int j=0; j<features.length; j++) {
     			
     			if(Math.rint(Math.random())==1) {
@@ -89,7 +139,7 @@ public class Classification
     				features[j]=Math.random();	
     			}
     		}
-    		booker = Math.rint(Math.random()*10)==1?"+1":"-1";
+    		booker = Math.rint(Math.random()*5)==1?"+1":"-1";
     		for(int j=0; j<features.length; j++) {
     			if(booker.equals("+1")) {
     		//	System.out.print(features[j]+",");
