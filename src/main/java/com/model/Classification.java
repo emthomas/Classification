@@ -6,6 +6,7 @@ import java.io.FileReader;
 import java.io.PrintStream;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Enumeration;
 
 import weka.classifiers.Classifier;
 import weka.classifiers.Evaluation;
@@ -13,7 +14,8 @@ import weka.classifiers.bayes.NaiveBayes;
 import weka.classifiers.functions.LinearRegression;
 import weka.core.Attribute;
 import weka.core.DenseInstance;
-import weka.core.FastVector;
+import weka.attributeSelection.AttributeSelection;
+import weka.attributeSelection.InfoGainAttributeEval;
 import weka.core.Instance;
 import weka.core.Instances;
 import weka.filters.Filter;
@@ -32,9 +34,25 @@ public class Classification
 		train(model, dataTrain);
     	//System.out.println(model);
     	evaluate(dataTrain,dataTest);
+    	
+    	evaluateAttributes(dataTrain);
+    	
 		//System.out.println(dataTrain.toSummaryString());
-		System.out.println(dataTrain);
+		//System.out.println(dataTrain);
 		//test(model, dataTest);
+    	
+    }
+    
+    public static void evaluateAttributes(Instances dataTrain) throws Exception {
+    	AttributeSelection attSelection = new AttributeSelection();
+    	attSelection.SelectAttributes(dataTrain);
+    	InfoGainAttributeEval infoGain = new InfoGainAttributeEval();
+    	infoGain.buildEvaluator(dataTrain);
+    	Enumeration<Attribute> list = dataTrain.enumerateAttributes();
+    	while(list.hasMoreElements()) {
+    		Attribute next = list.nextElement();
+    	System.out.println(next.name()+":"+infoGain.evaluateAttribute(next.index()));
+    	}
     }
     
     public static void setModel() throws Exception {
@@ -80,8 +98,8 @@ public class Classification
     }
     
     public static Instances BuildSampleDataset() throws Exception {
-    	int numOfAttribute = 3;
-    	int numOfInstances = 10;
+    	int numOfAttribute = 30;
+    	int numOfInstances = 100;
     	Instances data = null;
     	ArrayList<Attribute> attributes = new ArrayList<Attribute>();
     	
@@ -99,11 +117,11 @@ public class Classification
 	 {
 	 	Instance inst = new DenseInstance(data.numAttributes());
 	 	inst.setDataset(data);
-	 	String booker = Math.rint(Math.random()*5)==1?"+1":"-1";
+	 	String booker = Math.rint(Math.random()*2)==1?"+1":"-1";
 	 	inst.setClassValue(booker);
 	 	for(int i=0; i<numOfAttribute; i++) {
     		if(booker.equals("+1")) {
-    			inst.setValue(i, Math.random()+10);
+    			inst.setValue(i, (i<10)?Math.random()+10:Math.random());
         			}
         	else {
             	inst.setValue(i, Math.random());	
@@ -142,15 +160,12 @@ public class Classification
     		booker = Math.rint(Math.random()*5)==1?"+1":"-1";
     		for(int j=0; j<features.length; j++) {
     			if(booker.equals("+1")) {
-    		//	System.out.print(features[j]+",");
     			ps.print((features[j]+10)+",");
     			}
     			else {
-    			//	System.out.print(features[j]+",");
         			ps.print(features[j]+",");	
     			}
-    		}	
-    	//System.out.println(booker);
+    		}
     	ps.println(booker);
     	}
     	ps.close();
