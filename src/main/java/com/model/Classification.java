@@ -51,7 +51,9 @@ public class Classification
     	Enumeration<Attribute> list = dataTrain.enumerateAttributes();
     	while(list.hasMoreElements()) {
     		Attribute next = list.nextElement();
-    	System.out.println(next.name()+":"+infoGain.evaluateAttribute(next.index()));
+    		if(infoGain.evaluateAttribute(next.index())>0) {
+    		System.out.println(next.name()+":"+infoGain.evaluateAttribute(next.index()));
+    		}
     	}
     }
     
@@ -94,17 +96,17 @@ public class Classification
 		System.out.println(evaluation.toSummaryString(true));
 		System.out.println(evaluation.toClassDetailsString("=== Class ==="));
 		System.out.println(evaluation.toMatrixString("=== Matrix ==="));
-		System.out.println(evaluation.toCumulativeMarginDistributionString());
+		//System.out.println(evaluation.toCumulativeMarginDistributionString());
     }
     
     public static Instances BuildSampleDataset() throws Exception {
-    	int numOfAttribute = 30;
-    	int numOfInstances = 100;
+    	int numOfAttribute = 300;
+    	int numOfInstances = 1000;
     	Instances data = null;
     	ArrayList<Attribute> attributes = new ArrayList<Attribute>();
     	
     	for(int i=0; i<numOfAttribute; i++) {
-    		attributes.add(new Attribute("att_"+i));
+    		attributes.add(new Attribute("att_"+(i+1)));
     		if(i==numOfAttribute-1) {
     			attributes.add(new Attribute("class",Arrays.asList("+1","-1")));
     		}
@@ -121,10 +123,12 @@ public class Classification
 	 	inst.setClassValue(booker);
 	 	for(int i=0; i<numOfAttribute; i++) {
     		if(booker.equals("+1")) {
-    			inst.setValue(i, (i<10)?Math.random()+10:Math.random());
+    			//inst.setValue(i, (i<10)?Math.random()+10:Math.random());
+    			inst.setValue(i, (i%24==0)?(int)(Math.random()*10)+10:(int)(Math.random()*6)+10);
         			}
         	else {
-            	inst.setValue(i, Math.random());	
+            	//inst.setValue(i, Math.random());	
+    			inst.setValue(i, (i%18==0)?(int)(Math.random()*9):(int)(Math.random()*4));
         		}
     	}
 	 	data.add(inst);
