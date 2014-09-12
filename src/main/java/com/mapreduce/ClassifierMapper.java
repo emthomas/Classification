@@ -8,6 +8,10 @@ import org.apache.hadoop.mapreduce.Mapper;
 import org.apache.hadoop.mapreduce.Mapper.Context;
 
 public class ClassifierMapper extends Mapper<LongWritable,Text,Text,Text> {
+	@Override
+	public void setup(Context context) throws IOException, InterruptedException {
+		
+	}
 	
 	@Override
 	public void map(LongWritable key, Text value,  Context context) throws IOException, InterruptedException {
